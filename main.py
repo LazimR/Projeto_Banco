@@ -93,9 +93,23 @@ class Main(QMainWindow, Ui_Main):
 
     def mostra_Saldo(self):
         if self.tela_principal.Saldo_set.text() == '******':
+            self.tela_principal.Ocultar_Button.setStyleSheet("background-image: url(C:/Users/LazimR/Documents/GitHub/Projeto_Banco/imagens/olho_aberto.png);\n"
+"background-repeat: no-repeat;\n"
+"border-radius: 7px;\n"
+"border-style:solid;\n"
+"border-width:1px;\n"
+"border-color:black;\n"
+"")
             self.tela_principal.Saldo_set.setText(f'{self.b.contas[conta_atual].saldo}')
         else:
             self.tela_principal.Saldo_set.setText('******')
+            self.tela_principal.Ocultar_Button.setStyleSheet("background-image: url(C:/Users/LazimR/Documents/GitHub/Projeto_Banco/imagens/olho_fechado.png);\n"
+"background-repeat: no-repeat;\n"
+"border-radius: 7px;\n"
+"border-style:solid;\n"
+"border-width:1px;\n"
+"border-color:black;\n"
+"")
 
     def abre_AbaOpc(self):
         global aba_atual
