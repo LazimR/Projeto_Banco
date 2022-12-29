@@ -16,6 +16,7 @@ from tela_cadastro import Ui_TelaCadastro
 from tela_principal import Ui_TelaPrincipal
 
 conta_atual = ''
+aba_atual = None
 
 class Ui_Main(QtWidgets.QWidget):
     def setupUi(self, Main):
@@ -45,20 +46,158 @@ class Ui_Main(QtWidgets.QWidget):
 
 
 class Main(QMainWindow, Ui_Main):
+
+
     def __init__(self):
         super(Main, self).__init__(None)
         self.setupUi(self)
 
         self.b = Banco()
 
-        self.tela_login.Login_button.clicked.connect(self.abrirTelaPrincipal)
+        self.tela_login.Login_button.clicked.connect(self.botao_login)
         self.tela_login.Cadastro_button.clicked.connect(self.abrirTelaCadastro)
+        self.tela_login.Sair_Button.clicked.connect(self.finalizar)
 
         self.tela_cadastro.Cadastrar_button.clicked.connect(self.botao_cadastra)
+        self.tela_cadastro.Voltar_button.clicked.connect(self.abrirTelaLogin)
+        self.tela_cadastro.Sair_Button.clicked.connect(self.finalizar)
 
+        self.tela_principal.Sair_Button.clicked.connect(self.finalizar)
+        
+        #Interações dos botões da Aba de opções
 
+        self.tela_principal.Deposito_Button.clicked.connect(self.abre_AbaDeposito)
+        self.tela_principal.Saque_Button.clicked.connect(self.abre_AbaSaque)
+        self.tela_principal.Transf_Button_2.clicked.connect(self.abre_AbaTransf)
+        self.tela_principal.Extrato_Button_2.clicked.connect(self.abre_AbaExtrato)
+        self.tela_principal.Ocultar_Button.clicked.connect(self.mostra_Saldo)
+        self.tela_principal.Logout_Button.clicked.connect(self.abrirTelaLogin)
+
+        #Interações dos botões da Aba de saque
+        self.tela_principal.Voltar_Button.clicked.connect(self.abre_AbaOpc)
+        self.tela_principal.Sacar_Button.clicked.connect(self.botao_saque)
+
+        #Interações dos botões da Aba de deposito
+        self.tela_principal.Voltar_Button_2.clicked.connect(self.abre_AbaOpc)
+        self.tela_principal.Depositar_Button.clicked.connect(self.botao_deposito)
+
+        self.tela_principal.Voltar.clicked.connect(self.abre_AbaOpc)
+
+        #Interações dos botões da Aba de transferência
+        self.tela_principal.Voltar_Button_3.clicked.connect(self.abre_AbaOpc)
+        self.tela_principal.Transf_Button.clicked.connect(self.botao_transf)
+    
+    def atualiza_tela_principal(self,l):             
+        self.tela_principal.Mensagem_user.setText(f'Seja bem-vindo {(self.b.contas[l].get_titular).get_nome}  Nº{self.b.contas[l].get_numero}')
+        self.tela_principal.Saldo_set.setText('******')
+
+    def mostra_Saldo(self):
+        if self.tela_principal.Saldo_set.text() == '******':
+            self.tela_principal.Saldo_set.setText(f'{self.b.contas[conta_atual].saldo}')
+        else:
+            self.tela_principal.Saldo_set.setText('******')
+
+    def abre_AbaOpc(self):
+        global aba_atual
+        if aba_atual == self.tela_principal.Frame_Saque:
+            self.tela_principal.Frame_Saque.close()
+            self.tela_principal.senhaLineEdit.setText('')
+            self.tela_principal.ValorLineEdit.setText('')
+            self.tela_principal.Frame_opc.show()
         
+        elif aba_atual == self.tela_principal.Frame_deposito:
+            self.tela_principal.Frame_deposito.close()
+            self.tela_principal.ValorLineEdit_2.setText('')
+            self.tela_principal.Frame_opc.show()
         
+        elif aba_atual == self.tela_principal.Frame_extrato:
+            self.tela_principal.Frame_extrato.close()
+            self.tela_principal.Frame_opc.show()
+        
+        elif aba_atual == self.tela_principal.Frame_Transf:
+            self.tela_principal.Frame_Transf.close()
+            self.tela_principal.senhaLineEdit_2.setText('')
+            self.tela_principal.ValorLineEdit_3.setText('')
+            self.tela_principal.destinatarioLineEdit.setText('')
+            self.tela_principal.Frame_opc.show()
+        
+        aba_atual = self.tela_principal.Frame_opc
+
+    def abre_AbaDeposito(self):
+        self.tela_principal.Frame_opc.close()
+        self.tela_principal.Frame_deposito.show()
+        global aba_atual
+        aba_atual = self.tela_principal.Frame_deposito
+    
+    def abre_AbaSaque(self):
+        self.tela_principal.Frame_opc.close()
+        self.tela_principal.Frame_Saque.show()
+        global aba_atual
+        aba_atual = self.tela_principal.Frame_Saque
+
+    def abre_AbaTransf(self):
+        self.tela_principal.Frame_opc.close()
+        self.tela_principal.Frame_Transf.show()
+        global aba_atual
+        aba_atual = self.tela_principal.Frame_Transf
+
+    def abre_AbaExtrato(self):
+        self.tela_principal.Frame_opc.close()
+        self.tela_principal.Frame_extrato.show()
+        self.tela_principal.Texto_extrato.setText((self.b.contas[conta_atual].get_historico).imprime())
+        global aba_atual
+        aba_atual = self.tela_principal.Frame_extrato
+
+    def botao_saque(self):
+        senha = self.tela_principal.senhaLineEdit.text()
+        valor = self.tela_principal.ValorLineEdit.text()
+        if not(senha == '' and valor == ''):
+            if self.b.contas[conta_atual].saque(float(valor),senha):
+                QMessageBox().information(None,'L-Bank','Saque feito com sucesso!')
+                self.tela_principal.senhaLineEdit.setText('')
+                self.tela_principal.ValorLineEdit.setText('')
+                if not(self.tela_principal.Saldo_set.text() == '******'):
+                    self.tela_principal.Saldo_set.setText(f'{self.b.contas[conta_atual].saldo}')
+            else:
+                QMessageBox().information(None,'L-Bank','Falha na operação!')
+        else:
+            QMessageBox().information(None,'L-Bank','Todos os dados devem ser preenchidos!')
+    
+    def botao_deposito(self):
+        valor = self.tela_principal.ValorLineEdit_2.text()
+        if not(valor == ''):
+            if self.b.contas[conta_atual].deposita(float(valor)):
+                QMessageBox().information(None,'L-Bank','Deposito feito com sucesso!')
+                self.tela_principal.ValorLineEdit_2.setText('')
+                if not(self.tela_principal.Saldo_set.text() == '******'):
+                    self.tela_principal.Saldo_set.setText(f'{self.b.contas[conta_atual].saldo}')
+            else:
+                QMessageBox().information(None,'L-Bank','Falha na operação!')
+        else:
+            QMessageBox().information(None,'L-Bank','Todos os dados devem ser preenchidos!')
+
+    def botao_transf(self):
+        senha = self.tela_principal.senhaLineEdit_2.text()
+        valor = self.tela_principal.ValorLineEdit_3.text()
+        destino = self.tela_principal.destinatarioLineEdit.text()
+
+        if not(senha == '' or valor == '' or destino == ''):
+            if not(self.b.busca_conta(destino) == None):
+                destino = self.b.busca_conta(destino)
+                if self.b.contas[conta_atual].transfere(destino,float(valor),senha):
+                    QMessageBox().information(None,'L-Bank','Transferência feita com sucesso!')
+                    self.tela_principal.senhaLineEdit_2.setText('')
+                    self.tela_principal.ValorLineEdit_3.setText('')
+                    self.tela_principal.destinatarioLineEdit.setText('')
+                    if not(self.tela_principal.Saldo_set.text() == '******'):
+                        self.tela_principal.Saldo_set.setText(f'{self.b.contas[conta_atual].saldo}')
+                else:
+                    QMessageBox().information(None,'L-Bank','Falha na operação!')
+            else:
+                QMessageBox().information(None,'L-Bank','Conta não encontrada!')
+        else:
+            QMessageBox().information(None,'L-Bank','Todos os dados devem ser preenchidos!')
+
 
     def botao_cadastra(self):
         nome = self.tela_cadastro.Nome_line.text()
@@ -86,10 +225,15 @@ class Main(QMainWindow, Ui_Main):
         login = self.tela_login.Login_line.text()
         senha = self.tela_login.Senha_line.text()
 
-        if not(login == '' and senha == ''):
-            if confirma_login(login,senha):
+        if not(login == '' or senha == ''):
+            if confirma_login(login,senha,self.b):
+                global conta_atual
                 conta_atual = login
-                self.abrirTelaPrincipal()
+                self.abrirTelaPrincipal(login)
+            else:
+                QMessageBox().information(None,'L-Bank','Login/Senha incorreto!')    
+        else:
+            QMessageBox().information(None,'L-Bank','Todos os dados devem ser preenchidos!')
 
 
     def abrirTelaCadastro(self):
@@ -97,10 +241,16 @@ class Main(QMainWindow, Ui_Main):
     
     def abrirTelaLogin(self):
         self.QtStack.setCurrentIndex(0)
+        self.tela_principal.Frame_opc.show()
+        
     
-    def abrirTelaPrincipal(self):
+    def abrirTelaPrincipal(self,l):
         self.QtStack.setCurrentIndex(1)
-
+        self.atualiza_tela_principal(l)
+        self.tela_principal.Frame_deposito.close()
+        self.tela_principal.Frame_Transf.close()
+        self.tela_principal.Frame_extrato.close()
+        self.tela_principal.Frame_Saque.close()
     
     def finalizar(self):
         sys.exit()

@@ -41,7 +41,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>Banco</string>
+   <string>L-Bank</string>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -93,14 +93,20 @@ border-radius:15;</string>
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="Mensagem_user">
      <property name="geometry">
       <rect>
        <x>30</x>
        <y>20</y>
-       <width>161</width>
+       <width>541</width>
        <height>16</height>
       </rect>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>400</width>
+       <height>0</height>
+      </size>
      </property>
      <property name="font">
       <font>
@@ -115,7 +121,7 @@ border-radius:15;</string>
       <string>Olá, User</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_2">
+    <widget class="QLabel" name="Saldo_label">
      <property name="geometry">
       <rect>
        <x>30</x>
@@ -134,7 +140,7 @@ border-radius:15;</string>
       <string>Saldo:</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_3">
+    <widget class="QLabel" name="Saldo_set">
      <property name="geometry">
       <rect>
        <x>90</x>
@@ -156,7 +162,7 @@ border-radius:15;</string>
       <string>123456789,9</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="pushButton">
+    <widget class="QPushButton" name="Ocultar_Button">
      <property name="geometry">
       <rect>
        <x>210</x>
@@ -188,6 +194,46 @@ border-color:black;
      </property>
      <property name="text">
       <string/>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="Sair_Button">
+     <property name="geometry">
+      <rect>
+       <x>670</x>
+       <y>50</y>
+       <width>51</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">border-radius: 2px;
+border-style:solid;
+border-width:1px;
+border-color:black;
+</string>
+     </property>
+     <property name="text">
+      <string>SAIR</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="Logout_Button">
+     <property name="geometry">
+      <rect>
+       <x>670</x>
+       <y>20</y>
+       <width>51</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">border-radius: 2px;
+border-style:solid;
+border-width:1px;
+border-color:black;
+</string>
+     </property>
+     <property name="text">
+      <string>LOGOUT</string>
      </property>
     </widget>
    </widget>
@@ -1046,13 +1092,13 @@ border-color:black;</string>
      </item>
     </layout>
    </widget>
-   <zorder>Frame_extrato</zorder>
    <zorder>Fundo</zorder>
    <zorder>frame</zorder>
    <zorder>Frame_opc</zorder>
    <zorder>Frame_Saque</zorder>
    <zorder>Frame_deposito</zorder>
    <zorder>Frame_Transf</zorder>
+   <zorder>Frame_extrato</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

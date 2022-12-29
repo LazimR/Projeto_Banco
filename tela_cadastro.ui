@@ -35,7 +35,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Banco</string>
+   <string>L-Bank</string>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -213,7 +213,7 @@ border-color:black;</string>
      <property name="geometry">
       <rect>
        <x>160</x>
-       <y>180</y>
+       <y>190</y>
        <width>100</width>
        <height>30</height>
       </rect>
@@ -319,6 +319,31 @@ border-width:1px;
 border-color:black;</string>
      </property>
     </widget>
+    <widget class="QPushButton" name="Voltar_button">
+     <property name="geometry">
+      <rect>
+       <x>160</x>
+       <y>230</y>
+       <width>100</width>
+       <height>30</height>
+      </rect>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>100</width>
+       <height>30</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">border-radius:10px;
+border-style:solid;
+border-width:2px;
+border-color:black;</string>
+     </property>
+     <property name="text">
+      <string>Voltar</string>
+     </property>
+    </widget>
     <zorder>Cpf_label</zorder>
     <zorder>Login_label</zorder>
     <zorder>Login_line</zorder>
@@ -328,6 +353,27 @@ border-color:black;</string>
     <zorder>Nome_label</zorder>
     <zorder>Cpf_line</zorder>
     <zorder>Nome_line</zorder>
+    <zorder>Voltar_button</zorder>
+   </widget>
+   <widget class="QPushButton" name="Sair_Button">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>20</y>
+      <width>51</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius: 2px;
+border-style:solid;
+border-width:1px;
+border-color:black;
+background-color:white;</string>
+    </property>
+    <property name="text">
+     <string>SAIR</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

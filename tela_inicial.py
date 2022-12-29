@@ -106,6 +106,14 @@ class Ui_TelaLogin(object):
         font.setPointSize(88)
         self.label_2.setFont(font)
         self.label_2.setObjectName("label_2")
+        self.Sair_Button = QtWidgets.QPushButton(self.centralwidget)
+        self.Sair_Button.setGeometry(QtCore.QRect(700, 30, 51, 21))
+        self.Sair_Button.setStyleSheet("border-radius: 2px;\n"
+"border-style:solid;\n"
+"border-width:1px;\n"
+"border-color:black;\n"
+"background-color:white;")
+        self.Sair_Button.setObjectName("Sair_Button")
         TelaLogin.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(TelaLogin)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
@@ -127,6 +135,7 @@ class Ui_TelaLogin(object):
         self.Cadastro_label.setText(_translate("TelaLogin", "Não possui cadastro? "))
         self.Cadastro_button.setText(_translate("TelaLogin", "Clique aqui"))
         self.label_2.setText(_translate("TelaLogin", "L-Bank"))
+        self.Sair_Button.setText(_translate("TelaLogin", "SAIR"))
 
 
 if __name__ == "__main__":

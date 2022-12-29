@@ -73,7 +73,7 @@ class Conta:
     def deposita(self,quantidade):
         if quantidade > 0:
             self.saldo += quantidade
-            self._historico.transacao.append(f'Deposito:{quantidade} - Data:{datetime.datetime.now()}') 
+            self._historico.transacao.append(f'Deposito:{quantidade} - Data:{datetime.datetime.now()}\n') 
             return True
         else:
             return False
@@ -82,9 +82,9 @@ class Conta:
         if senha == self._senha and quantidade > 0 and quantidade <= self.saldo:
             self.saldo -= quantidade
             if t == 0:
-                self._historico.transacao.append(f'Saque:{quantidade} - Data:{datetime.datetime.now()}')
+                self._historico.transacao.append(f'Saque:{quantidade} - Data:{datetime.datetime.now()}\n')
             else:
-                self._historico.transacao.append(f'Transferência:{quantidade} - Data:{datetime.datetime.now()}')
+                self._historico.transacao.append(f'Transferência:{quantidade} - Data:{datetime.datetime.now()}\n')
             return True
         
         else:
@@ -128,10 +128,10 @@ class Historico:
         self.transacao = []
 
     def imprime(self):
-        print(f'Data abertura: {self.data_abertura}')
-        print('Transações:')
+        extrato = (f'Data abertura: {self.data_abertura}\nTransações:\n')
         for i in self.transacao:
-            print(i)
+            extrato += i
+        return extrato
 
 def gera_numero(b):
     n = randint(100,999)
@@ -159,6 +159,13 @@ class Banco:
             return True
         else:
             return False
+    
+    def busca_conta(self,n):
+        for i in self.contas:
+            if str(self.contas[i].get_numero) == n:
+                return self.contas[i]
+        return None
+        
 
 def confirma_login(l,s,b):
     if l in b.contas:

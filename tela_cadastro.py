@@ -77,7 +77,7 @@ class Ui_TelaCadastro(object):
 "border-color:black;")
         self.Senha_line.setObjectName("Senha_line")
         self.Cadastrar_button = QtWidgets.QPushButton(self.frame_principal)
-        self.Cadastrar_button.setGeometry(QtCore.QRect(160, 180, 100, 30))
+        self.Cadastrar_button.setGeometry(QtCore.QRect(160, 190, 100, 30))
         self.Cadastrar_button.setMaximumSize(QtCore.QSize(100, 30))
         self.Cadastrar_button.setStyleSheet("border-radius:10px;\n"
 "border-style:solid;\n"
@@ -115,6 +115,14 @@ class Ui_TelaCadastro(object):
 "border-width:1px;\n"
 "border-color:black;")
         self.Nome_line.setObjectName("Nome_line")
+        self.Voltar_button = QtWidgets.QPushButton(self.frame_principal)
+        self.Voltar_button.setGeometry(QtCore.QRect(160, 230, 100, 30))
+        self.Voltar_button.setMaximumSize(QtCore.QSize(100, 30))
+        self.Voltar_button.setStyleSheet("border-radius:10px;\n"
+"border-style:solid;\n"
+"border-width:2px;\n"
+"border-color:black;")
+        self.Voltar_button.setObjectName("Voltar_button")
         self.Cpf_label.raise_()
         self.Login_label.raise_()
         self.Login_line.raise_()
@@ -124,6 +132,15 @@ class Ui_TelaCadastro(object):
         self.Nome_label.raise_()
         self.Cpf_line.raise_()
         self.Nome_line.raise_()
+        self.Voltar_button.raise_()
+        self.Sair_Button = QtWidgets.QPushButton(self.centralwidget)
+        self.Sair_Button.setGeometry(QtCore.QRect(700, 20, 51, 21))
+        self.Sair_Button.setStyleSheet("border-radius: 2px;\n"
+"border-style:solid;\n"
+"border-width:1px;\n"
+"border-color:black;\n"
+"background-color:white;")
+        self.Sair_Button.setObjectName("Sair_Button")
         TelaCadastro.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(TelaCadastro)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
@@ -145,6 +162,8 @@ class Ui_TelaCadastro(object):
         self.Cadastrar_button.setText(_translate("TelaCadastro", "Cadastrar"))
         self.Cpf_label.setText(_translate("TelaCadastro", "CPF:"))
         self.Nome_label.setText(_translate("TelaCadastro", "Nome:"))
+        self.Voltar_button.setText(_translate("TelaCadastro", "Voltar"))
+        self.Sair_Button.setText(_translate("TelaCadastro", "SAIR"))
 
 
 if __name__ == "__main__":
