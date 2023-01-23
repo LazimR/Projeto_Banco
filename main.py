@@ -295,6 +295,7 @@ class Main(QMainWindow, Ui_Main):
             mensagem = mensagem.split(',')
             #Verifica se a operação ocorreu corretamente
             if mensagem[0] == '1':
+
                 #Informa ao usuário e limpa os campos
                 QMessageBox().information(None,'L-Bank',f'Cadastro feito com sucesso!\nSeu número é {mensagem[1]}')
                 self.tela_cadastro.Nome_line.setText('')
