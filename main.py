@@ -15,6 +15,7 @@ from tela_cadastro import Ui_TelaCadastro
 from tela_principal import Ui_TelaPrincipal
 import socket
 import hashlib
+import re
 
 conta_atual = ''
 aba_atual = None
@@ -44,8 +45,6 @@ class Ui_Main(QtWidgets.QWidget):
         self.QtStack.addWidget(self.stack2)
 
 
-
-
 class Main(QMainWindow, Ui_Main):
 
 
@@ -53,7 +52,7 @@ class Main(QMainWindow, Ui_Main):
         super(Main, self).__init__(None)
         self.setupUi(self)
 
-        self.host = '192.168.43.51' #IP atual do servidor
+        self.host = '192.168.43.226' #IP atual do servidor
         self.port = 8000
         self.saldo_atual = 0
         self.addr = ((self.host,self.port))
@@ -99,7 +98,7 @@ class Main(QMainWindow, Ui_Main):
 
     def mostra_Saldo(self):
         if self.tela_principal.Saldo_set.text() == '******':
-            self.tela_principal.Ocultar_Button.setStyleSheet("background-image: url(C:/Users/LazimR/Documents/GitHub/Projeto_Banco/imagens/olho_aberto.png);\n"
+            self.tela_principal.Ocultar_Button.setStyleSheet("background-image: url('C:/Users/kndso/OneDrive/Documentos/UFPI 4/POO II/Códigos/Projeto Banco/Lazimr/Projeto_Banco/imagens/olho_aberto.png');\n"
 "background-repeat: no-repeat;\n"
 "border-radius: 7px;\n"
 "border-style:solid;\n"
@@ -109,7 +108,7 @@ class Main(QMainWindow, Ui_Main):
             self.tela_principal.Saldo_set.setText(f'{self.saldo_atual}')
         else:
             self.tela_principal.Saldo_set.setText('******')
-            self.tela_principal.Ocultar_Button.setStyleSheet("background-image: url(C:/Users/LazimR/Documents/GitHub/Projeto_Banco/imagens/olho_fechado.png);\n"
+            self.tela_principal.Ocultar_Button.setStyleSheet("background-image: url('C:/Users/kndso/OneDrive/Documentos/UFPI 4/POO II/Códigos/Projeto Banco/Lazimr/Projeto_Banco/imagens/olho_fechado.png');\n"
 "background-repeat: no-repeat;\n"
 "border-radius: 7px;\n"
 "border-style:solid;\n"
@@ -170,76 +169,87 @@ class Main(QMainWindow, Ui_Main):
 
     def imprime_extrato(self):
         extrato = ''
+        
         #Enviar pedido de extrato ao servidor, parâmetros (tipo do pedido,numero)
-        self.socket_client.send(f'5,{conta_atual}')
+        self.socket_client.send(f'5,{conta_atual}'.encode())
 
         while(True):
             #Recebe um dado
-            aux += self.socket_client.recv(1024).decode()
+            aux = self.socket_client.recv(1024).decode()
             #Se o dado for diferente de 1, significa que é uma data
-            if aux != 1:
+            if aux != '1':
                 #Concatena a data mais um \n e concatena com a variavel extrato
                 extrato += aux + '\n'
             else:
                 break
-            
-            self.socket_client.send('1'.encode())
+            self.socket_client.send(f'1,oi'.encode())
         return extrato
 
 
     def botao_saque(self):
         senha = self.tela_principal.senhaLineEdit.text()
         valor = self.tela_principal.ValorLineEdit.text()
+
         if not(senha == '' and valor == ''):
-            #Conversão da senha para MD5
-            senha_hex = hashlib.md5(senha.encode())
-            senha_hex = senha_hex.hexdigest()
-            #Enviar pedido de saque ao servidor, parâmetros (tipo do pedido,senha,numero,valor)
-            self.socket_client.send(f'3,{senha_hex},{conta_atual},{valor}')
-            #Recebimento dos dados e separação
-            mensagem = self.socket_client.recv(1024).decode()
-            mensagem = mensagem.split(',')
-            #Verifica se a operação ocorreu corretamente
-            if mensagem[0] == '1':
-                #Informa o usuário e limpa o campo
-                QMessageBox().information(None,'L-Bank','Saque feito com sucesso!')
-                self.tela_principal.senhaLineEdit.setText('')
-                self.tela_principal.ValorLineEdit.setText('')
-                #Verifica se o saldo está sendo exibido
-                if not(self.tela_principal.Saldo_set.text() == '******'):
-                    #Se o saldo estiver exibido, atualiza o valor e atribui o novo valor saldo_atual
-                    self.tela_principal.Saldo_set.setText(f'{mensagem[1]}')
-                    self.saldo_atual = mensagem[1]
+            try:
+                float(valor)
+                #Conversão da senha para MD5
+                senha_hex = hashlib.md5(senha.encode())
+                senha_hex = senha_hex.hexdigest()
+                #Enviar pedido de saque ao servidor, parâmetros (tipo do pedido,senha,numero,valor)
+                self.socket_client.send(f'3,{senha_hex},{conta_atual},{valor}'.encode())
+                #Recebimento dos dados e separação
+                mensagem = self.socket_client.recv(1024).decode()
+                print(mensagem)
+                mensagem = mensagem.split(',')
+                #Verifica se a operação ocorreu corretamente
+                if mensagem[0] == '1':
+                    #Informa o usuário e limpa o campo
+                    QMessageBox().information(None,'L-Bank','Saque feito com sucesso!')
+                    self.tela_principal.senhaLineEdit.setText('')
+                    self.tela_principal.ValorLineEdit.setText('')
+                    #Verifica se o saldo está sendo exibido
+                    
+                    if not(self.tela_principal.Saldo_set.text() == '******'):
+                        #Se o saldo estiver exibido, atualiza o valor e atribui o novo valor saldo_atual
+                        self.tela_principal.Saldo_set.setText(f'{mensagem[1]}')
+                        self.saldo_atual = float(mensagem[1])
+                    else:
+                        self.saldo_atual = float(mensagem[1])
                 else:
-                    self.saldo_atual = mensagem[1]
-            else:
-                QMessageBox().information(None,'L-Bank','Falha na operação!')
+                    QMessageBox().information(None,'L-Bank','Falha na operação!')
+            except ValueError:
+                QMessageBox().information(None,'L-Bank','Preencha o campo com valor numérico')
         else:
             QMessageBox().information(None,'L-Bank','Todos os dados devem ser preenchidos!')
     
     def botao_deposito(self):
         valor = self.tela_principal.ValorLineEdit_2.text()
-        if not(valor == ''):
-            #Enviar pedido de deposito ao servidor, parâmetros (tipo do pedido,numero,valor)
-            self.socket_client.send(f'2,{conta_atual},{valor}')
-            #Recebimento dos dados e separação
-            mensagem = self.socket_client.recv(1024).decode()
-            mensagem = mensagem.split(',')
-            #Verifica se a operação ocorreu corretamente
-            if mensagem[0] == '1':
-                #Informa o usuário e limpa o campo
-                QMessageBox().information(None,'L-Bank','Deposito feito com sucesso!')
-                self.tela_principal.ValorLineEdit_2.setText('')
-                #Verifica se o saldo está sendo exibido
-                if not(self.tela_principal.Saldo_set.text() == '******'):
-                    #Se o saldo estiver exibido, atualiza o valor e atribui o novo valor saldo_atual
-                    self.tela_principal.Saldo_set.setText(f'{mensagem[1]}')
-                    self.saldo_atual = mensagem[1]
-                else:
-                    self.saldo_atual = mensagem[1]
+        if not (valor == '') :
+            try:
+                float(valor)    
+                #Enviar pedido de deposito ao servidor, parâmetros (tipo do pedido,numero,valor)
+                self.socket_client.send(f'2,{conta_atual},{valor}'.encode())
+                #Recebimento dos dados e separação
+                mensagem = self.socket_client.recv(1024).decode()
+                mensagem = mensagem.split(',')
+                #Verifica se a operação ocorreu corretamente
+                if mensagem[0] == '1':
+                    #Informa o usuário e limpa o campo
+                    QMessageBox().information(None,'L-Bank','Deposito feito com sucesso!')
+                    self.tela_principal.ValorLineEdit_2.setText('')
+                    #Verifica se o saldo está sendo exibido
+                    if not(self.tela_principal.Saldo_set.text() == '******'):
+                        #Se o saldo estiver exibido, atualiza o valor e atribui o novo valor saldo_atual
+                        self.tela_principal.Saldo_set.setText(f'{mensagem[1]}')
+                        self.saldo_atual = float(mensagem[1])
+                    else:
+                        self.saldo_atual = float(mensagem[1])
 
-            else:
-                QMessageBox().information(None,'L-Bank','Falha na operação!')
+                else:
+                    QMessageBox().information(None,'L-Bank','Falha na operação!')
+            except ValueError:
+                QMessageBox().information(None,'L-Bank','Preencha o campo com valor numérico')
         else:
             QMessageBox().information(None,'L-Bank','Todos os dados devem ser preenchidos!')
 
@@ -249,64 +259,73 @@ class Main(QMainWindow, Ui_Main):
         destino = self.tela_principal.destinatarioLineEdit.text()
 
         if not(senha == '' or valor == '' or destino == ''):
-            #Conversão da senha para MD5
-            senha_hex = hashlib.md5(senha.encode())
-            senha_hex = senha_hex.hexdigest()
-            #Enviar pedido de transferência ao servidor, parâmetros (tipo do pedido,senha,n_R,n_D,valor)
-            self.socket_client.send(f'4,{senha_hex},{conta_atual},{destino},{valor}')
-            #Recebimento e separação dos dados
-            mensagem = self.socket_client.recv(1024).decode()
-            mensagem = mensagem.split(',')
-            #Verifica se a operação ocorreu corretamente
-            if mensagem[0] == '1':
-                #Informa ao usuário e limpa os campos
-                QMessageBox().information(None,'L-Bank','Transferência feita com sucesso!')
-                self.tela_principal.senhaLineEdit_2.setText('')
-                self.tela_principal.ValorLineEdit_3.setText('')
-                self.tela_principal.destinatarioLineEdit.setText('')
-                #Verifica se o saldo está sendo exibido
-                if not(self.tela_principal.Saldo_set.text() == '******'):
-                    #Se o saldo estiver exibido, atualiza o valor e atribui o novo valor saldo_atual
-                    self.tela_principal.Saldo_set.setText(f'{mensagem[1]}')
-                    self.saldo_atual = mensagem[1]
+            try:
+                float(valor)
+                #Conversão da senha para MD5
+                senha_hex = hashlib.md5(senha.encode())
+                senha_hex = senha_hex.hexdigest()
+                #Enviar pedido de transferência ao servidor, parâmetros (tipo do pedido,senha,n_R,n_D,valor)
+                self.socket_client.send(f'4,{senha_hex},{conta_atual},{destino},{valor}'.encode())
+                #Recebimento e separação dos dados
+                mensagem = self.socket_client.recv(1024).decode()
+                mensagem = mensagem.split(',')
+                #Verifica se a operação ocorreu corretamente
+                if mensagem[0] == '1':
+                    #Informa ao usuário e limpa os campos
+                    QMessageBox().information(None,'L-Bank','Transferência feita com sucesso!')
+                    self.tela_principal.senhaLineEdit_2.setText('')
+                    self.tela_principal.ValorLineEdit_3.setText('')
+                    self.tela_principal.destinatarioLineEdit.setText('')
+                    #Verifica se o saldo está sendo exibido
+                    if not(self.tela_principal.Saldo_set.text() == '******'):
+                        #Se o saldo estiver exibido, atualiza o valor e atribui o novo valor saldo_atual
+                        self.tela_principal.Saldo_set.setText(f'{mensagem[1]}')
+                        self.saldo_atual = float(mensagem[1])
+                    else:
+                        self.saldo_atual = float(mensagem[1])
                 else:
-                    self.saldo_atual = mensagem[1]
-            else:
-                QMessageBox().information(None,'L-Bank','Falha na operação!')
-
+                    QMessageBox().information(None,'L-Bank','Falha na operação!')
+            except ValueError:
+                QMessageBox().information(None,'L-Bank','Preencha o campo com valor numérico')
         else:
             QMessageBox().information(None,'L-Bank','Todos os dados devem ser preenchidos!')
 
 
     def botao_cadastra(self):
         nome = self.tela_cadastro.Nome_line.text()
+        expr = re.compile('\d{3}\.\d{3}\.\d{3}\-\d{2}')
         cpf = self.tela_cadastro.Cpf_line.text()
         login = self.tela_cadastro.Login_line.text()
         senha = self.tela_cadastro.Senha_line.text()
 
         if not(nome == '' or senha == '' or cpf == '' or login == ''):
-            #Conversão da senha para MD5
-            senha_hex = hashlib.md5(senha.encode())
-            senha_hex = senha_hex.hexdigest()
-            #Enviar pedido de cadastro ao servidor, parâmetros (tipo do pedido,nome,cpf,login,senha)
-            self.socket_client.send(f'0,{nome},{cpf},{login},{senha_hex}'.encode())
-            #Recebimento dos dados e separação
-            mensagem = self.socket_client.recv(1024).decode()
-            mensagem = mensagem.split(',')
-            #Verifica se a operação ocorreu corretamente
-            if mensagem[0] == '1':
+            if expr.search(cpf):
+                #Conversão da senha para MD5
+                senha_hex = hashlib.md5(senha.encode())
+                senha_hex = senha_hex.hexdigest()
+                #Enviar pedido de cadastro ao servidor, parâmetros (tipo do pedido,nome,cpf,login,senha)
+                self.socket_client.send(f'0,{nome},{cpf},{login},{senha_hex}'.encode())
+                #Recebimento dos dados e separação2
+                mensagem = self.socket_client.recv(1024).decode()
+                mensagem = mensagem.split(',')
+                print(mensagem)
+                #Verifica se a operação ocorreu corretamente
+                if mensagem[0] == '1':
 
-                #Informa ao usuário e limpa os campos
-                QMessageBox().information(None,'L-Bank',f'Cadastro feito com sucesso!\nSeu número é {mensagem[1]}')
-                self.tela_cadastro.Nome_line.setText('')
-                self.tela_cadastro.Login_line.setText('')
-                self.tela_cadastro.Cpf_line.setText('')
-                self.tela_cadastro.Senha_line.setText('')
+                    #Informa ao usuário e limpa os campos
+                    QMessageBox().information(None,'L-Bank',f'Cadastro feito com sucesso!\nSeu número é {mensagem[1]}')
+                    self.tela_cadastro.Nome_line.setText('')
+                    self.tela_cadastro.Login_line.setText('')
+                    self.tela_cadastro.Cpf_line.setText('')
+                    self.tela_cadastro.Senha_line.setText('')
+                else:
+                    QMessageBox().information(None,'L-Bank','Titular já possui cadastrado!')
+                        
             else:
-                QMessageBox().information(None,'L-Bank','Titular já possui cadastrado!')
-                    
+                QMessageBox().information(None,'L-Bank','CPF inváldo. Utilize apenas números, pontos e hifén adequadamente.')
         else:
             QMessageBox().information(None,'L-Bank','Todos os dados devem ser preenchidos!')
+
 
     def botao_login(self):
         login = self.tela_login.Login_line.text()
@@ -317,17 +336,18 @@ class Main(QMainWindow, Ui_Main):
             senha_hex = hashlib.md5(senha.encode())
             senha_hex = senha_hex.hexdigest()
             #Enviar pedido de login ao servidor, parâmetros (tipo do pedido,login,senha)
-            self.socket_client.send(f'1,{login},{senha_hex}')
+            self.socket_client.send(f'1,{login},{senha_hex}'.encode())
             #Recebimento dos dados e separação
             dados = self.socket_client.recv(1024).decode()
             dados = dados.split(',')
             #Verifica se operação ocorreu corretamente
             if dados[0] == '1':
                 global conta_atual
-                conta_atual = dados[1]
+                conta_atual = dados[2]
                 #Limpa os campos e abre a tela de login
                 self.tela_login.Login_line.setText('')
                 self.tela_login.Senha_line.setText('')
+                self.saldo_atual = float(dados[3])
                 self.abrirTelaPrincipal(dados[1],dados[2])
             else:
                 QMessageBox().information(None,'L-Bank','Login/Senha incorreto!')    
@@ -352,6 +372,7 @@ class Main(QMainWindow, Ui_Main):
         self.tela_principal.Frame_Saque.close()
     
     def finalizar(self):
+        self.socket_client.send('1'.encode())
         sys.exit()
 
 if __name__ == "__main__":
@@ -360,3 +381,4 @@ if __name__ == "__main__":
     show_main = Main()
 
     sys.exit(app.exec_())
+
