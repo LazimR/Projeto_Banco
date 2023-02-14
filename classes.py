@@ -8,6 +8,33 @@ import threading
 from datetime import datetime
 
 class usuario(threading.Thread):
+
+    """
+    Essa classe representa um cliente
+
+    Atributos
+    ---------------
+    adress : objeto
+    É o endereço da maquina do usuário
+    
+    con : objeto
+    É a conexão do cliente com o servidor
+    
+    conn : objeto
+    É a conexão com o banco de dados
+
+    cursor: objeto
+    É um objeto que é instaciado da conexão, servindo para fazer consultas SQL
+
+    Metodos
+    ---------------
+
+    run():
+        Essa função possui um laço while que vai ficar processando a conexão do usuário,
+        recebendo seus pedidos e retornando o que precisa. Até que a conexão seja encerrada
+
+    """
+
     def __init__(self,adress,con) -> None:
         threading.Thread.__init__(self)
         self.con = con
@@ -15,16 +42,34 @@ class usuario(threading.Thread):
         self.conn = mysql.connector.connect(host='localhost',database='sysbank',user='root',password='')
         self.cursor = self.conn.cursor()
         print('Nova conexao:',self.con)
+    """
+    Na função __init__ ela inicializa nossos atributos e recebe os atributos e funções da classe Thread
+    Printando que a conexão foi feita e com qual usuário.
+    """
 
     def run(self):
         while(True):
 #       0 - Cadastro | 1 - Login | 2 - Deposito | 3 - Saque | 4 - Transferência | 5 - Extrato
-            
+            """
+            Nessa parte da função ela vai ficar recebendo e tratando a mensagem que o usuário enviar,
+            que vai ser composta basicamente de (nº da operação, valores restantes para a operação)
+            """
             self.operacao = self.con.recv(1024)
             self.operacao = (self.operacao.decode()).split(',')
-
+            
 #           -------- CADASTRO --------
             if self.operacao[0] == '0':
+                """
+                Nessa parte o programa irá fazer uma pesquisa SQL recebendo todos os usuários do 
+                nosso BD(banco de dados), logo em seguida ele irá filtrar a retorno da consulta, para
+                verificar se os dados do usuário ja existem no BD, caso contrario ele continua a
+                operação.
+
+                O programa chama a função gera_numero e depois cadastra o nosso usuário no BD
+                e envia uma mensagem com o valor 1 e o número da conta do usuário.
+
+                No caso do usuário ja estar cadastrado, o programa envia um mensagem com o valor 0. 
+                """
                 print('Cadastro\n')
                 #restante dos valores | 1 == nome | 2 == cpf | 3 == login | 4 == senha
                 self.query = 'SELECT cpf, login FROM conta'
@@ -52,6 +97,13 @@ class usuario(threading.Thread):
 
 #           -------- LOGIN --------
             elif self.operacao[0] == '1':
+                """
+                Nessa parte da função o programa faz uma consulta SQL para pegar os dados de 
+                usuários cadastrados e então verifica se os dados recebidos são iguais a algum do nosso 
+                BD, se for, ele envia uma mensagem com 1, nome do usuário, nº da conta e o saldo.
+
+                Caso os dados não correspondam ele envia a mensagem com 0. 
+                """
                 print('Login')
                 #restante dos valores | 1 == login | 2 == senha
                 self.query = 'SELECT login,senha,nome,numero,saldo FROM conta'
@@ -70,6 +122,13 @@ class usuario(threading.Thread):
 
 #           -------- DEPOSITO --------
             elif self.operacao[0] == '2':
+                """
+                Nessa parte, primeiramente ele verifica se a quantia é maior que 0, se sim,
+                nosso programa faz uma consulta SQL, atualizando o saldo da conta do usuário e
+                inserindo essa operação no historico, e envia uma mensagem com 1 e o saldo atual.
+
+                Caso o número não seja maior que 0, o programa envia uma mensagem com 0.
+                """
                 print('Deposito')
                 #restante dos valores | 1 == numero | 2 == quantidade
                 if float(self.operacao[2]) > 0:
@@ -97,6 +156,18 @@ class usuario(threading.Thread):
 
 #           -------- SAQUE --------
             elif self.operacao[0] == '3':
+                """
+                Nessa parte do codigo o programa faz uma consulta SQL recebendo a senha,numero e saldo
+                de todas as contas do BD, depois filtra os dados, ficando apenas os dados do nosso
+                usuário. Em seguida o programa faz outra consulta SQL, reduzindo o valor do saldo no
+                BD e logo após inserindo essa operação no historico. E por fim envia uma mensagem com 1 
+                e o saldo atual da conta.
+
+                Caso a quantidade do saque seja maior que o saldo na conta o programa envia uma
+                mensagem com 2.
+
+                Caso a senha esteja incorreta o programa envia uma mensagem com 0.
+                """
                 print('Saque')
                 #restante dos valores | 1 == senha | 2 == numero | 3 == valor
                 self.query = 'SELECT senha,numero,saldo FROM conta'
@@ -135,6 +206,20 @@ class usuario(threading.Thread):
 
 #           -------- TRANSFERÊNCIA --------      
             elif self.operacao[0] == '4':
+                """
+                Nessa condição o programa faz um consulta SQL, para receber os dados de todos os 
+                usuários, depois ele filtra para permanecer apenas os dados do nosso usuário.
+                Após isso ele faz outra consulta para receber o número de todos os usuários, se o 
+                número do destinatário existir no nosso banco o programa continua a operação.
+                Em seguida ele reduz o saldo da conta do nosso usuário e inseri essa operação no
+                historico, após isso ele aumenta o saldo do destinatário e inseri essa operação no
+                historico. E então o programa envia uma mensagem com 1 e o saldo atual da conta do
+                nosso usuário.
+
+                Caso o destinatário não exista, o programa envia uma mensagem 0.
+
+                Caso a senha esteja incorreta, o programa envia uma mensagem 2.
+                """
                 #restante dos valores | 1 == senha | 2 == numero R. | 3 == numero D. | 4 == valor
                 
                 self.query = 'SELECT senha,numero,saldo FROM conta'
@@ -192,6 +277,13 @@ class usuario(threading.Thread):
 
 #           -------- EXTRATO --------
             elif self.operacao[0] == '5':
+                """
+                Nessa ultima operação, o programa faz uma consulta SQL pegando todas a informações
+                do historico, em seguida ele filtra para ficar apenas os dados refentes ao nosso 
+                usuário, logo após ele irá ficar mandando mensagens para o usuário com cada 
+                uma da operações do historico, até que lista com os dados do historico esteja
+                vazia. E por fim ele envia uma mensagem com 1.
+                """
                 print('Extrato')
                 #Restante dos valores | 1 = numero
                 self.query = 'SELECT operacao,numero FROM historico'
