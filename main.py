@@ -17,10 +17,28 @@ import socket
 import hashlib
 import re
 
-conta_atual = ''
+'''
+Variáveis auxiliares globais.
+
+    conta_atual
+        receberá o número da conta do cliente logado para ser consultado localmente
+    
+    aba_atual
+        será atribuída a tela atual do projeto para utilização de condições em métodos da classe Main
+'''
+conta_atual = '' 
 aba_atual = None
 
 class Ui_Main(QtWidgets.QWidget):
+    '''
+    Esta classe representa a janela que gerencia as telas do PyQt5 importadas.
+
+    Métodos:
+    --------
+    setupUI(self, Main):
+        Faz o empilhamento de telas e instancia cada uma.
+    '''
+
     def setupUi(self, Main):
         Main.setObjectName("Main")
         Main.resize(640, 480)
@@ -46,78 +64,129 @@ class Ui_Main(QtWidgets.QWidget):
 
 
 class Main(QMainWindow, Ui_Main):
+    '''
+    Esta classe representa a Main. O cliente se comunica com o servidor através de seus métodos.
 
+    '''
 
     def __init__(self):
         super(Main, self).__init__(None)
         self.setupUi(self)
 
-        self.host = '192.168.43.226' #IP atual do servidor
-        self.port = 8000
-        self.saldo_atual = 0
-        self.addr = ((self.host,self.port))
-        self.socket_client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-        self.socket_client.connect(self.addr)
+        self.host = '192.168.43.226' # IP atual do servidor
+        self.port = 8000 # Porta de conexão
+        self.saldo_atual = 0 # Variável que será mostrada nas telas para informar o valor do saldo do cliente logado
+        self.addr = ((self.host,self.port)) # Atribuição do endereço de rede do servidor
+        self.socket_client = socket.socket(socket.AF_INET,socket.SOCK_STREAM) # Cria o socket do cliente
+        self.socket_client.connect(self.addr) # Finaliza a conexão utilizando o endereço do servidor como parâmetro
 
+#       ---- CONEXÃO DE BOTÕES AOS MÉTODOS DA CLASSE
+#       ---- Definindo ações ao clicar
+#       Tela de Login:
         self.tela_login.Login_button.clicked.connect(self.botao_login)
         self.tela_login.Cadastro_button.clicked.connect(self.abrirTelaCadastro)
         self.tela_login.Sair_Button.clicked.connect(self.finalizar)
 
+#       Tela de Cadastro:
         self.tela_cadastro.Cadastrar_button.clicked.connect(self.botao_cadastra)
         self.tela_cadastro.Voltar_button.clicked.connect(self.abrirTelaLogin)
         self.tela_cadastro.Sair_Button.clicked.connect(self.finalizar)
 
+#       Tela Principal (cabeçalho):
         self.tela_principal.Sair_Button.clicked.connect(self.finalizar)
-        
-        #Interações dos botões da Aba de opções
+        self.tela_principal.Logout_Button.clicked.connect(self.abrirTelaLogin)
+        self.tela_principal.Ocultar_Button.clicked.connect(self.mostra_Saldo)
 
+#       Tela Principal (aba de operações):
         self.tela_principal.Deposito_Button.clicked.connect(self.abre_AbaDeposito)
         self.tela_principal.Saque_Button.clicked.connect(self.abre_AbaSaque)
         self.tela_principal.Transf_Button_2.clicked.connect(self.abre_AbaTransf)
         self.tela_principal.Extrato_Button_2.clicked.connect(self.abre_AbaExtrato)
-        self.tela_principal.Ocultar_Button.clicked.connect(self.mostra_Saldo)
-        self.tela_principal.Logout_Button.clicked.connect(self.abrirTelaLogin)
-
-        #Interações dos botões da Aba de saque
-        self.tela_principal.Voltar_Button.clicked.connect(self.abre_AbaOpc)
+        
+#       Tela Principal (aba de saque):        
         self.tela_principal.Sacar_Button.clicked.connect(self.botao_saque)
-
-        #Interações dos botões da Aba de deposito
-        self.tela_principal.Voltar_Button_2.clicked.connect(self.abre_AbaOpc)
+        self.tela_principal.Voltar_Button.clicked.connect(self.abre_AbaOpc)
+        
+#       Tela Principal (aba de depósito):
         self.tela_principal.Depositar_Button.clicked.connect(self.botao_deposito)
+        self.tela_principal.Voltar_Button_2.clicked.connect(self.abre_AbaOpc)
 
+#       Tela Principal (aba de transferência):        
+        self.tela_principal.Transf_Button.clicked.connect(self.botao_transf)
+        self.tela_principal.Voltar_Button_3.clicked.connect(self.abre_AbaOpc)
+        
+#       Tela Principal (aba de extrato):
         self.tela_principal.Voltar.clicked.connect(self.abre_AbaOpc)
 
-        #Interações dos botões da Aba de transferência
-        self.tela_principal.Voltar_Button_3.clicked.connect(self.abre_AbaOpc)
-        self.tela_principal.Transf_Button.clicked.connect(self.botao_transf)
     
-    def atualiza_tela_principal(self,nome,n):             
-        self.tela_principal.Mensagem_user.setText(f'Seja bem-vindo {nome}  Nº{n}')
-        self.tela_principal.Saldo_set.setText('******')
+    def atualiza_tela_principal(self,nome,n):
+        '''
+        Atualiza a tela principal com as informações do cliente conectado.
+        É chamada pelo método abrirTelaPrincipal.
+
+        Parâmetros:
+        -----------
+            nome : str
+                primeiro nome do cliente
+            n : str
+                numero da conta do cliente
+        '''            
+
+        self.tela_principal.Mensagem_user.setText(f'Seja bem-vindo(a) {nome}  Nº{n}')
+        self.tela_principal.Saldo_set.setText('******') # Mostra asteríscos ao invés do saldo. É modificado no método mostra_Saldo
 
     def mostra_Saldo(self):
+        '''
+        Atualiza o texto referente ao saldo no cabeçalho da tela principal.
+
+        Passando por uma condição, o método verifica se o texto está em asteríscos para mostrar a variável
+        self.saldo_atual ou vice-versa ao clicar no botão.
+
+        Quando o saldo está oculto, a imagem do botão é um ícone de olho fechado.
+        Quando está visível, a imagem do botão é um ícone de olho aberto.
+        '''
+
         if self.tela_principal.Saldo_set.text() == '******':
+            self.tela_principal.Saldo_set.setText(f'{self.saldo_atual}') # Altera o texto de asteríscos para o valor do saldo
+ 
+            # Altera a imagem para o olho aberto (buscando pelo endereço da imagem na máquina)
+            # Botão ajustado com CSS
             self.tela_principal.Ocultar_Button.setStyleSheet("background-image: url('C:/Users/kndso/OneDrive/Documentos/UFPI 4/POO II/Códigos/Projeto Banco/Lazimr/Projeto_Banco/imagens/olho_aberto.png');\n"
-"background-repeat: no-repeat;\n"
-"border-radius: 7px;\n"
-"border-style:solid;\n"
-"border-width:1px;\n"
-"border-color:black;\n"
-"")
-            self.tela_principal.Saldo_set.setText(f'{self.saldo_atual}')
+            "background-repeat: no-repeat;\n"
+            "border-radius: 7px;\n"
+            "border-style:solid;\n"
+            "border-width:1px;\n"
+            "border-color:black;\n"
+            "")
+            
         else:
-            self.tela_principal.Saldo_set.setText('******')
+            self.tela_principal.Saldo_set.setText('******') # Altera o texto do valor do saldo para asteríscos
+
+            # Altera a imagem para o olho fechado (buscando pelo endereço da imagem na máquina)
+            # Botão ajustado com CSS
             self.tela_principal.Ocultar_Button.setStyleSheet("background-image: url('C:/Users/kndso/OneDrive/Documentos/UFPI 4/POO II/Códigos/Projeto Banco/Lazimr/Projeto_Banco/imagens/olho_fechado.png');\n"
-"background-repeat: no-repeat;\n"
-"border-radius: 7px;\n"
-"border-style:solid;\n"
-"border-width:1px;\n"
-"border-color:black;\n"
-"")
+            "background-repeat: no-repeat;\n"
+            "border-radius: 7px;\n"
+            "border-style:solid;\n"
+            "border-width:1px;\n"
+            "border-color:black;\n"
+            "")
 
     def abre_AbaOpc(self):
-        global aba_atual
+        '''
+        Abre a janela com as operações do banco ao clicar no botão de Login
+        ou ao clicar nos botões Voltar das telas de operação (depósito, saque, transferência e extrato).
+
+        Ao logar, a variável recebe self.tela_principal.Frame_opc no final das condições.
+        Depois de acessar alguma das operações, a tela vai ser atribuída a aba_atual nos métodos seguintes.
+        Quando o botão de voltar for clicado, uma das condições será satisfeita.
+
+        Neste caso, o sistema irá fechar a tela de operação - .close() -, limpar os campos de texto - setText('')- (se houver)
+        e voltar a exibir a tela de operação - .show() -.
+        '''
+
+        global aba_atual # Chamada da varíavel global
+
         if aba_atual == self.tela_principal.Frame_Saque:
             self.tela_principal.Frame_Saque.close()
             self.tela_principal.senhaLineEdit.setText('')
@@ -142,11 +211,13 @@ class Main(QMainWindow, Ui_Main):
         
         aba_atual = self.tela_principal.Frame_opc
 
+    
+#   Nos seguintes métodos, a lógica é a mesma e auxilia o método abre_AbaOpc.
     def abre_AbaDeposito(self):
-        self.tela_principal.Frame_opc.close()
-        self.tela_principal.Frame_deposito.show()
-        global aba_atual
-        aba_atual = self.tela_principal.Frame_deposito
+        self.tela_principal.Frame_opc.close() # Fecha a tela anterior
+        self.tela_principal.Frame_deposito.show() # Exibe a tela da operação
+        global aba_atual # Chama a variável global
+        aba_atual = self.tela_principal.Frame_deposito # Atribui a tela a variável (explicado no método anterior)
     
     def abre_AbaSaque(self):
         self.tela_principal.Frame_opc.close()
@@ -168,50 +239,91 @@ class Main(QMainWindow, Ui_Main):
         aba_atual = self.tela_principal.Frame_extrato
 
     def imprime_extrato(self):
+        '''
+        Este método cria uma variável local de extrato : str para receber do servidor
+        várias strings concatenadas com as informações do extrato do cliente.
+
+        A partir daqui, as informações enviadas ao servidor possuem um número que serve como chave
+        para que o servidor identifique o tipo de operação que deverá ser realizado com os dados.
+
+        Retornos:
+            extrato (str):
+                texto com as datas e operações realizadas pelo usuário
+        '''
+
         extrato = ''
         
-        #Enviar pedido de extrato ao servidor, parâmetros (tipo do pedido,numero)
+        # Envio do pedido de extrato ao servidor. Chave 5.
         self.socket_client.send(f'5,{conta_atual}'.encode())
 
         while(True):
-            #Recebe um dado
-            aux = self.socket_client.recv(1024).decode()
-            #Se o dado for diferente de 1, significa que é uma data
+            '''
+            O laço de repetição fará operações até o último registro de histórico ser concatenado.
+
+            O servidor envia as datas e operações para a variável aux e, ao final, envia 1 para interromper o laço.
+            Em todas as repetições, o cliente envia uma mensagem para o servidor para controlar o tráfego
+            de dados e evitar que todas as informações cheguem de uma vez.
+            '''
+            aux = self.socket_client.recv(1024).decode() # Recebimento de informações
+            
             if aux != '1':
-                #Concatena a data mais um \n e concatena com a variavel extrato
-                extrato += aux + '\n'
+                extrato += aux + '\n' # Concatenação de datas
             else:
                 break
-            self.socket_client.send(f'1,oi'.encode())
+            self.socket_client.send(f'1,oi'.encode()) # Mensagem de controle
         return extrato
 
-
     def botao_saque(self):
-        senha = self.tela_principal.senhaLineEdit.text()
-        valor = self.tela_principal.ValorLineEdit.text()
+        '''
+        Este método realiza a operação de saque, retirando o valor
+        informado do saldo atual do cliente conectado.
 
-        if not(senha == '' and valor == ''):
+        As variáveis senha e valor recebem o texto digitado nos campos
+        da tela de saque. Caso nenhum dos campos esteja vazio, o sistema
+        usa o try pra tratar o tipo de dado de valor, para que apenas números
+        sejam enviados ao servidor. A senha é convertida para o tipo de
+        criptografia MD5 e enviada para o servidor para comparar com a senha
+        definida pelo cliente no cadastro.
+
+        Em seguida, o cliente envia o pedido de saque, com o tipo de operação (chave),
+        a senha e o valor do saque. Quando a verificação é feita, o servidor retorna
+        uma mensagem informando o êxito ou a falha na operação.
+
+        Em caso de sucesso, os campos são limpos e o saldo é atualizado (no banco de dados
+        e na exibição do cabeçalho caso não esteja oculto).
+
+        Para todos os casos de False, o sistema abre uma janela indicando a falha na operação.
+        '''
+
+        senha = self.tela_principal.senhaLineEdit.text()
+        valor = self.tela_principal.ValorLineEdit.text() 
+
+        if not(senha == '' and valor == ''): # Verificação de preenchimento dos campos
             try:
-                float(valor)
-                #Conversão da senha para MD5
-                senha_hex = hashlib.md5(senha.encode())
+                float(valor) # Verificação de tipo de dado
+                
+                # Conversão de senha para MD5
+                senha_hex = hashlib.md5(senha.encode()) 
                 senha_hex = senha_hex.hexdigest()
-                #Enviar pedido de saque ao servidor, parâmetros (tipo do pedido,senha,numero,valor)
+                
+                # Envio do pedido de saque ao servidor. Chave 3
                 self.socket_client.send(f'3,{senha_hex},{conta_atual},{valor}'.encode())
-                #Recebimento dos dados e separação
+                
+                # Recebimento dos dados e separação
                 mensagem = self.socket_client.recv(1024).decode()
                 print(mensagem)
                 mensagem = mensagem.split(',')
-                #Verifica se a operação ocorreu corretamente
+                
+                # Verificação do êxito da operação
                 if mensagem[0] == '1':
-                    #Informa o usuário e limpa o campo
+                    # Informa o usuário e limpa o campo
                     QMessageBox().information(None,'L-Bank','Saque feito com sucesso!')
                     self.tela_principal.senhaLineEdit.setText('')
                     self.tela_principal.ValorLineEdit.setText('')
-                    #Verifica se o saldo está sendo exibido
+                    # Verifica se o saldo está sendo exibido
                     
                     if not(self.tela_principal.Saldo_set.text() == '******'):
-                        #Se o saldo estiver exibido, atualiza o valor e atribui o novo valor saldo_atual
+                        # Se o saldo estiver exibido, atualiza o valor e atribui o novo valor saldo_atual
                         self.tela_principal.Saldo_set.setText(f'{mensagem[1]}')
                         self.saldo_atual = float(mensagem[1])
                     else:
@@ -224,23 +336,46 @@ class Main(QMainWindow, Ui_Main):
             QMessageBox().information(None,'L-Bank','Todos os dados devem ser preenchidos!')
     
     def botao_deposito(self):
+        '''
+        Este método realiza a operação de deposito, adicionando o valor
+        informado do saldo atual do cliente conectado.
+
+        A variável valor recebe o texto digitado no campo
+        da tela de depósito. Caso o campo não esteja vazio, o sistema
+        usa o try pra tratar o tipo de dado de valor, para que apenas números
+        sejam enviados ao servidor.
+
+        Em seguida, o cliente envia o pedido de depósito, com o tipo de operação (chave),
+        e o valor do depósito. Quando a verificação é feita, o servidor retorna
+        uma mensagem informando o êxito ou a falha na operação.
+
+        Em caso de sucesso, o campo é limpo e o saldo é atualizado (no banco de dados
+        e na exibição do cabeçalho caso não esteja oculto).
+
+        Para todos os casos de False, o sistema abre uma janela indicando a falha na operação.
+        '''
+
         valor = self.tela_principal.ValorLineEdit_2.text()
-        if not (valor == '') :
+
+        if not (valor == ''): # Verificação de preenchimento dos campos
             try:
-                float(valor)    
-                #Enviar pedido de deposito ao servidor, parâmetros (tipo do pedido,numero,valor)
+                float(valor) # Verificação do tipo de dado 
+                
+                # Envio do pedido de deposito ao servidor. Chave 2
                 self.socket_client.send(f'2,{conta_atual},{valor}'.encode())
-                #Recebimento dos dados e separação
+                
+                # Recebimento dos dados e separação
                 mensagem = self.socket_client.recv(1024).decode()
                 mensagem = mensagem.split(',')
-                #Verifica se a operação ocorreu corretamente
+                
+                # Verificação do êxito da operação
                 if mensagem[0] == '1':
-                    #Informa o usuário e limpa o campo
+                    # Informa o usuário e limpa o campo
                     QMessageBox().information(None,'L-Bank','Deposito feito com sucesso!')
                     self.tela_principal.ValorLineEdit_2.setText('')
-                    #Verifica se o saldo está sendo exibido
+                    # Verifica se o saldo está sendo exibido
                     if not(self.tela_principal.Saldo_set.text() == '******'):
-                        #Se o saldo estiver exibido, atualiza o valor e atribui o novo valor saldo_atual
+                        # Se o saldo estiver exibido, atualiza o valor e atribui o novo valor saldo_atual
                         self.tela_principal.Saldo_set.setText(f'{mensagem[1]}')
                         self.saldo_atual = float(mensagem[1])
                     else:
@@ -254,31 +389,55 @@ class Main(QMainWindow, Ui_Main):
             QMessageBox().information(None,'L-Bank','Todos os dados devem ser preenchidos!')
 
     def botao_transf(self):
+        '''
+        Este método realiza a operação de transferência, adicionando o valor
+        informado do saldo atual do cliente destinatário e retirando do cliente conectado.
+
+        As variáveis senha, valor e destino (número da conta do destinatário) recebem os
+        textos digitados nos campos da tela de transferência. Caso os campos não estejam vazios,
+        o sistema usa o try pra tratar o tipo de dado de valor, para que apenas números
+        sejam enviados ao servidor. A senha é convertida para o tipo de
+        criptografia MD5 e enviada para o servidor para comparar com a senha
+        definida pelo cliente no cadastro.
+
+        Em seguida, o cliente envia o pedido de transferência, com o tipo de operação (chave),
+        e o valor do transferência. Quando a verificação é feita, o servidor retorna
+        uma mensagem informando o êxito ou a falha na operação.
+
+        Em caso de sucesso, os campos são limpos e ambos os saldos são atualizados (no banco de dados
+        e na exibição do cabeçalho do usuário conectado, caso não esteja oculto).
+
+        Para todos os casos de False, o sistema abre uma janela indicando a falha na operação.
+        '''
         senha = self.tela_principal.senhaLineEdit_2.text()
         valor = self.tela_principal.ValorLineEdit_3.text()
         destino = self.tela_principal.destinatarioLineEdit.text()
 
-        if not(senha == '' or valor == '' or destino == ''):
+        if not(senha == '' or valor == '' or destino == ''): # Verificação de preenchimento dos campos
             try:
-                float(valor)
-                #Conversão da senha para MD5
+                float(valor) # Verificação do tipo de dado
+                
+                # Conversão da senha para MD5
                 senha_hex = hashlib.md5(senha.encode())
                 senha_hex = senha_hex.hexdigest()
-                #Enviar pedido de transferência ao servidor, parâmetros (tipo do pedido,senha,n_R,n_D,valor)
+                
+                # Envio do pedido de transferência ao servidor. Chave 4
                 self.socket_client.send(f'4,{senha_hex},{conta_atual},{destino},{valor}'.encode())
-                #Recebimento e separação dos dados
+                
+                # Recebimento e separação dos dados
                 mensagem = self.socket_client.recv(1024).decode()
                 mensagem = mensagem.split(',')
-                #Verifica se a operação ocorreu corretamente
+                
+                # Verificação do êxito da operação
                 if mensagem[0] == '1':
                     #Informa ao usuário e limpa os campos
                     QMessageBox().information(None,'L-Bank','Transferência feita com sucesso!')
                     self.tela_principal.senhaLineEdit_2.setText('')
                     self.tela_principal.ValorLineEdit_3.setText('')
                     self.tela_principal.destinatarioLineEdit.setText('')
-                    #Verifica se o saldo está sendo exibido
+                    # Verifica se o saldo está sendo exibido
                     if not(self.tela_principal.Saldo_set.text() == '******'):
-                        #Se o saldo estiver exibido, atualiza o valor e atribui o novo valor saldo_atual
+                        # Se o saldo estiver exibido, atualiza o valor e atribui o novo valor saldo_atual
                         self.tela_principal.Saldo_set.setText(f'{mensagem[1]}')
                         self.saldo_atual = float(mensagem[1])
                     else:
@@ -292,27 +451,46 @@ class Main(QMainWindow, Ui_Main):
 
 
     def botao_cadastra(self):
+        '''
+        Este método envia as informações de cadastro para o servidor, que manda para o banco de dados.
+
+        As variáveis vão receber os valores digitados nos campos da tela de cadastro, exceto a expr (pois
+        esta vai receber o formato de tratamento de cpf da biblioteca Regular Expressions - RE). Caso
+        todos os campos tenham sido preenchidos, uma nova condição é feita para verificar o formato de CPF
+        informado. A senha é convertida para o tipo de criptografia MD5, enviada para o servidor e registrada
+        no banco de dados.
+
+        Em seguida, o cliente envia o pedido de cadastro, com o tipo de operação (chave),
+        e as informações da conta. Quando a verificação é feita, o servidor retorna
+        uma mensagem informando o êxito ou a falha na operação.
+
+        Para todos os casos de False, o sistema abre uma janela indicando a falha na operação.
+        '''
         nome = self.tela_cadastro.Nome_line.text()
-        expr = re.compile('\d{3}\.\d{3}\.\d{3}\-\d{2}')
+        expr = re.compile('\d{3}\.\d{3}\.\d{3}\-\d{2}') # Atribuição do formato de CPF YYY.YYY.YYY-YY
         cpf = self.tela_cadastro.Cpf_line.text()
         login = self.tela_cadastro.Login_line.text()
         senha = self.tela_cadastro.Senha_line.text()
 
-        if not(nome == '' or senha == '' or cpf == '' or login == ''):
+        if not(nome == '' or senha == '' or cpf == '' or login == ''): # Verificação de preenchimento dos campos
             if expr.search(cpf):
-                #Conversão da senha para MD5
+
+                # Conversão da senha para MD5
                 senha_hex = hashlib.md5(senha.encode())
                 senha_hex = senha_hex.hexdigest()
-                #Enviar pedido de cadastro ao servidor, parâmetros (tipo do pedido,nome,cpf,login,senha)
+                
+                # Envio do pedido de cadastro ao servidor. Chave 0
                 self.socket_client.send(f'0,{nome},{cpf},{login},{senha_hex}'.encode())
-                #Recebimento dos dados e separação2
+                
+                # Recebimento dos dados e separação2
                 mensagem = self.socket_client.recv(1024).decode()
                 mensagem = mensagem.split(',')
                 print(mensagem)
-                #Verifica se a operação ocorreu corretamente
+                
+                # Verificação de êxito da operação
                 if mensagem[0] == '1':
 
-                    #Informa ao usuário e limpa os campos
+                    # Informa ao usuário e limpa os campos
                     QMessageBox().information(None,'L-Bank',f'Cadastro feito com sucesso!\nSeu número é {mensagem[1]}')
                     self.tela_cadastro.Nome_line.setText('')
                     self.tela_cadastro.Login_line.setText('')
@@ -328,23 +506,41 @@ class Main(QMainWindow, Ui_Main):
 
 
     def botao_login(self):
+        '''
+        Este método envia as informações de login para o servidor, que verifica a validade
+        das informações no banco de dados.
+
+        As variáveis vão receber os valores digitados nos campos da tela de login.
+        Se todos os campos tenham sido preenchidos, a senha é convertida em MD5 e são
+        enviados ao servidor a chave do tipo de operação, o login do usuário e esta senha
+        para que o servidor verifique se o usuário existe e se aquela é a senha dele.
+
+        Quando a verificação é feita, o servidor retorna 
+        uma mensagem informando o êxito ou a falha na operação.
+        
+        Para todos os casos de False, o sistema abre uma janela indicando a falha na operação.
+        '''
         login = self.tela_login.Login_line.text()
         senha = self.tela_login.Senha_line.text()
 
         if not(login == '' or senha == ''):
-            #Conversão da senha para MD5
+            # Conversão da senha para MD5
             senha_hex = hashlib.md5(senha.encode())
             senha_hex = senha_hex.hexdigest()
-            #Enviar pedido de login ao servidor, parâmetros (tipo do pedido,login,senha)
+            
+            # Envio do pedido de login ao servidor. Chave 1
             self.socket_client.send(f'1,{login},{senha_hex}'.encode())
-            #Recebimento dos dados e separação
+            
+            # Recebimento dos dados e separação
             dados = self.socket_client.recv(1024).decode()
             dados = dados.split(',')
-            #Verifica se operação ocorreu corretamente
+            
+            # Verificação de êxito da operação
             if dados[0] == '1':
                 global conta_atual
                 conta_atual = dados[2]
-                #Limpa os campos e abre a tela de login
+                
+                # Limpa os campos e abre a tela de login
                 self.tela_login.Login_line.setText('')
                 self.tela_login.Senha_line.setText('')
                 self.saldo_atual = float(dados[3])
@@ -354,7 +550,7 @@ class Main(QMainWindow, Ui_Main):
         else:
             QMessageBox().information(None,'L-Bank','Todos os dados devem ser preenchidos!')
 
-
+#   --- MÉTODOS PARA EXIBIÇÃO DE TELAS
     def abrirTelaCadastro(self):
         self.QtStack.setCurrentIndex(2)
     
@@ -362,16 +558,26 @@ class Main(QMainWindow, Ui_Main):
         self.QtStack.setCurrentIndex(0)
         self.tela_principal.Frame_opc.show()
         
-    
     def abrirTelaPrincipal(self,nome,numero):
+        '''
+        Parâmetros:
+        -----------
+            nome : str
+                primeiro nome do cliente
+            numero : str
+                numero da conta do cliente (gerado pelo servidor)
+        '''
         self.QtStack.setCurrentIndex(1)
         self.atualiza_tela_principal(nome,numero)
+
+        # Demais delas de operação são encerradas
         self.tela_principal.Frame_deposito.close()
         self.tela_principal.Frame_Transf.close()
         self.tela_principal.Frame_extrato.close()
         self.tela_principal.Frame_Saque.close()
     
     def finalizar(self):
+        # Envio de mensagem para informar o servidor que o cliente desconectou
         self.socket_client.send('1'.encode())
         sys.exit()
 
@@ -381,4 +587,3 @@ if __name__ == "__main__":
     show_main = Main()
 
     sys.exit(app.exec_())
-
