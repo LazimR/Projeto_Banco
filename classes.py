@@ -302,6 +302,10 @@ class usuario(threading.Thread):
                 
 
             elif self.operacao[0] == '6':
+                """
+                Por ultimo, se o número da operação for 6, o programa fecha conexão com o cliente
+                Encerra o loop do while e informa que o cliente se desconectou.
+                """
                 self.con.close()
                 break
         print('Client at ',self.adress, ' disconnected...')
@@ -311,13 +315,26 @@ class usuario(threading.Thread):
 
 
 def gera_numero(lista):
+    """
+    A função gera_numero(lista) gera um número aleatorio que não esteja cadastrado no nosso
+    banco de dados.
+
+    E retorna esse novo número.
+    """
     n = randint(100,999)
 
     for i in lista:
         if i[0] == n:
             return gera_numero(lista)
     return str(n)
-    
+
+"""
+No final do programa é definido o IP do servidor e a porta de rede, depois
+o servidor é iniciado. Após isso é criado um loop While onde vai ficar
+aguardando as novas conexões e instanciando uma thread para cada uma.
+
+socket_server.listen define a quantidade de conexões simultâneas.
+"""   
 HOST = '0.0.0.0'
 PORT = 8000
 addr = ((HOST,PORT))
